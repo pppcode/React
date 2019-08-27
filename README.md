@@ -144,7 +144,7 @@ console.log(element)
 ```
 输出
 
-![image](http://github.com/pppcode/React/raw/master/images/虚拟dom.jpg)
+![虚拟dom](http://github.com/pppcode/React/raw/master/images/虚拟dom.jpg)
 
 编译过程：
 
@@ -201,8 +201,8 @@ function render(vnode, container) {
 
 测试
 
-![image](http://github.com/pppcode/React/raw/master/images/页面显示效果.jpg)
-![image](http://github.com/pppcode/React/raw/master/images/真实dom结构.jpg)
+![页面显示效果](http://github.com/pppcode/React/raw/master/images/页面显示效果.jpg)
+![真实dom结构](http://github.com/pppcode/React/raw/master/images/真实dom结构.jpg)
 
 但是 dom 节点上并没有属性，如何定义设置属性的函数呢
 
@@ -250,7 +250,7 @@ function setAttribute(dom, attrs) {
 
 ```
 
-![image](http://github.com/pppcode/React/raw/master/images/设置 style 未生效.jpg)
+![设置 style 未生效](http://github.com/pppcode/React/raw/master/images/设置 style 未生效.jpg)
 
 但是并未生效, dom 对象不能直接修改他的 style （直接覆盖，重置是不行的），正确的做法`.style.color = 'red'`
 
@@ -268,7 +268,7 @@ function setAttribute(dom, attrs) {
 ```
 测试
 
-![image](http://github.com/pppcode/React/raw/master/images/属性解析.jpg)
+![属性解析](http://github.com/pppcode/React/raw/master/images/属性解析.jpg)
 
 点击click 执行了这个函数，打印出 click me
 
