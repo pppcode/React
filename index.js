@@ -14,8 +14,13 @@ function createElement(tag, attrs, ...children) { //es6语法中的数组，所�
   }
 }
 
-function render(vnode, container) {
-  if (typeof vnode === 'string') { //创建文本节点，挂载到容器中
+function render(vnode, container) { //每次调用 render 时，先把之前的清空
+  container.innerHTML = ''
+  _render(vnode, container)
+}
+
+function _render(vnode, container) {
+  if (typeof vnode === 'string' || typeof vnode === 'number') { //如果是 string 或者 nubmer 都去创建文本节点
     return container.appendChild(document.createTextNode(vnode))
   }
 
@@ -24,7 +29,7 @@ function render(vnode, container) {
     setAttribute(dom, vnode.attrs)
     if (vnode.children && Array.isArray(vnode.children)) {
       vnode.children.forEach(vnodeChild => {
-        render(vnodeChild, dom)
+        _render(vnodeChild, dom) //记得这里是 _render , 这里的逻辑是不清空的
       })
     }
 
@@ -44,22 +49,36 @@ function setAttribute(dom, attrs) {
   }
 }
 
-
-let name = 'zhangsan'
-function clickBtn() {
-  console.log('click me')
-}
+let num = 0
+let timer = null
 let styleObj = {
   color: 'red',
   fontSize: '20px'
 }
 
-JreactDOM.render((
-  <div className="wrapper">
-    <h1 style={styleObj}>hello {name}</h1>
-    <button onClick={clickBtn}>click me</button>
-  </div>
-), document.querySelector('#app')) //虚拟 dom 变成 真实的dom 节点后，挂载到容器上
+onStart() //一开始时执行
+
+function onStart() {
+  console.log('click me')
+  timer = setInterval(() => { //启动时，每秒钟计时一次，做一次渲染
+    num++
+    JreactDOM.render((
+      <div className="wrapper">
+        <h1 style = { styleObj }>Number: { num }</h1>
+        <button onClick = { onStart }>start</button>
+        <button onClick = { onPause }>pause</button>
+      </div>
+    ), document.querySelector('#app'))
+  }, 1000)
+}
+
+function onPause() {
+  clearInterval(timer) //点击停止时，清除定时器
+}
+
+
+
+
 
 
 

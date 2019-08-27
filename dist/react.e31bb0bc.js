@@ -143,8 +143,15 @@ function createElement(tag, attrs) {
 }
 
 function render(vnode, container) {
-  if (typeof vnode === 'string') {
-    //创建文本节点，挂载到容器中
+  //每次调用 render 时，先把之前的清空
+  container.innerHTML = '';
+
+  _render(vnode, container);
+}
+
+function _render(vnode, container) {
+  if (typeof vnode === 'string' || typeof vnode === 'number') {
+    //如果是 string 或者 nubmer 都去创建文本节点
     return container.appendChild(document.createTextNode(vnode));
   }
 
@@ -154,7 +161,8 @@ function render(vnode, container) {
 
     if (vnode.children && Array.isArray(vnode.children)) {
       vnode.children.forEach(function (vnodeChild) {
-        render(vnodeChild, dom);
+        _render(vnodeChild, dom); //记得这里是 _render , 这里的逻辑是不清空的
+
       });
     }
 
@@ -177,23 +185,34 @@ function setAttribute(dom, attrs) {
   }
 }
 
-var name = 'zhangsan';
-
-function clickBtn() {
-  console.log('click me');
-}
-
+var num = 0;
+var timer = null;
 var styleObj = {
   color: 'red',
   fontSize: '20px'
 };
-JreactDOM.render(Jreact.createElement("div", {
-  className: "wrapper"
-}, Jreact.createElement("h1", {
-  style: styleObj
-}, "hello ", name), Jreact.createElement("button", {
-  onClick: clickBtn
-}, "click me")), document.querySelector('#app')); //虚拟 dom 变成 真实的dom 节点后，挂载到容器上
+onStart(); //一开始时执行
+
+function onStart() {
+  console.log('click me');
+  timer = setInterval(function () {
+    //启动时，每秒钟计时一次，做一次渲染
+    num++;
+    JreactDOM.render(Jreact.createElement("div", {
+      className: "wrapper"
+    }, Jreact.createElement("h1", {
+      style: styleObj
+    }, "Number: ", num), Jreact.createElement("button", {
+      onClick: onStart
+    }, "start"), Jreact.createElement("button", {
+      onClick: onPause
+    }, "pause")), document.querySelector('#app'));
+  }, 1000);
+}
+
+function onPause() {
+  clearInterval(timer); //点击停止时，清除定时器
+}
 },{}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
