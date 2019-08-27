@@ -1,0 +1,9 @@
+{
+  "presets": ["env"], //覆盖范围（最新语法转换成浏览器支持的语法）
+  "plugins": [
+    ["transform-react-jsx",{
+      ////处理 JSX 的函数名，对jsx 语法进行拆解，作为这个函数的参数，Jreact.createElement("h1", null, "hello world");
+      "pragma": "Jreact.createElement" 
+    }]
+  ]
+}
