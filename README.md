@@ -144,7 +144,7 @@ console.log(element)
 ```
 输出
 
-截图
+![image](http://github.com/pppcode/React/raw/master/images/虚拟dom.jpg)
 
 编译过程：
 
@@ -201,8 +201,8 @@ function render(vnode, container) {
 
 测试
 
-截图-页面显示效果
-截图-真实dom结构
+![image](http://github.com/pppcode/React/raw/master/images/页面显示效果.jpg)
+![image](http://github.com/pppcode/React/raw/master/images/真实dom结构.jpg)
 
 但是 dom 节点上并没有属性，如何定义设置属性的函数呢
 
@@ -249,17 +249,27 @@ function setAttribute(dom, attrs) {
 }
 
 ```
-截图-style 并未生效
+
+![image](http://github.com/pppcode/React/raw/master/images/设置 style 未生效.jpg)
 
 但是并未生效, dom 对象不能直接修改他的 style （直接覆盖，重置是不行的），正确的做法`.style.color = 'red'`
 
 所以需要修改
 
 ```
+function setAttribute(dom, attrs) {
+  for(let key in attrs) {
+    ...
+    if(key === 'style') { //对 style 的处理
+      Object.assign(dom.style, attrs[key]) //新增的会赋值到 dom.style 上，同名的属性会覆盖
+    }
+  }
+}
 ```
 测试
 
-截图-属性解析
+![image](http://github.com/pppcode/React/raw/master/images/属性解析.jpg)
+
 点击click 执行了这个函数，打印出 click me
 
 结论: 变量，函数，属性对应的样式全都放进去了，至此，把这堆 jsx 变成了我们所需要的效果，这里面有事件的绑定，属性，样式
