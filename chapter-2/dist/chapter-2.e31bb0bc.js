@@ -117,30 +117,39 @@ parcelRequire = (function (modules, cache, entry, globalName) {
   }
 
   return newRequire;
-})({"index.js":[function(require,module,exports) {
-function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+})({"lib/jreact.js":[function(require,module,exports) {
+"use strict";
 
-var Jreact = {
-  //创建元素，组件
-  createElement: createElement
-};
-var JreactDOM = {
-  //用于去渲染，做一些其他的事情
-  render: render
-};
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
 
 function createElement(tag, attrs) {
   for (var _len = arguments.length, children = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
     children[_key - 2] = arguments[_key];
   }
 
-  //es6语法中的数组，所有的子元素放数组里
   return {
     tag: tag,
     attrs: attrs,
     children: children
   };
 }
+
+var _default = {
+  createElement: createElement
+};
+exports.default = _default;
+},{}],"lib/jreact-dom.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function render(vnode, container) {
   //每次调用 render 时，先把之前的清空
@@ -185,6 +194,19 @@ function setAttribute(dom, attrs) {
   }
 }
 
+var _default = {
+  render: render
+};
+exports.default = _default;
+},{}],"index.js":[function(require,module,exports) {
+"use strict";
+
+var _jreact = _interopRequireDefault(require("./lib/jreact"));
+
+var _jreactDom = _interopRequireDefault(require("./lib/jreact-dom"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 var num = 0;
 var timer = null;
 var styleObj = {
@@ -198,13 +220,14 @@ function onStart() {
   timer = setInterval(function () {
     //启动时，每秒钟计时一次，做一次渲染
     num++;
-    JreactDOM.render(Jreact.createElement("div", {
+
+    _jreactDom.default.render(_jreact.default.createElement("div", {
       className: "wrapper"
-    }, Jreact.createElement("h1", {
+    }, _jreact.default.createElement("h1", {
       style: styleObj
-    }, "Number: ", num), Jreact.createElement("button", {
+    }, "Number: ", num), _jreact.default.createElement("button", {
       onClick: onStart
-    }, "start"), Jreact.createElement("button", {
+    }, "start"), _jreact.default.createElement("button", {
       onClick: onPause
     }, "pause")), document.querySelector('#app'));
   }, 1000);
@@ -213,7 +236,7 @@ function onStart() {
 function onPause() {
   clearInterval(timer); //点击停止时，清除定时器
 }
-},{}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"./lib/jreact":"lib/jreact.js","./lib/jreact-dom":"lib/jreact-dom.js"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -241,7 +264,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "56047" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59263" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
@@ -416,5 +439,5 @@ function hmrAcceptRun(bundle, id) {
     return true;
   }
 }
-},{}]},{},["node_modules/parcel-bundler/src/builtins/hmr-runtime.js","index.js"], null)
-//# sourceMappingURL=/react.e31bb0bc.js.map
+},{}]},{},["../node_modules/parcel-bundler/src/builtins/hmr-runtime.js","index.js"], null)
+//# sourceMappingURL=/chapter-2.e31bb0bc.js.map

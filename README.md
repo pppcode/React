@@ -602,6 +602,114 @@ function onPause() {
 
 完美实现。
 
+### 模块化
+
+拆分 index.js 文件
+
+目录
+
+![模块化目录](https://github.com/pppcode/React/blob/master/images/模块化目录.jpg)
+
+jreact.js JSX 变成虚拟 DOM
+
+```
+function createElement(tag, attrs, ...children) { 
+  return {
+    tag,
+    attrs,
+    children
+  }
+}
+
+export default {
+  createElement
+}
+```
+
+jreact-dom.js 虚拟 DOM 渲染
+
+```
+function render(vnode, container) { //每次调用 render 时，先把之前的清空
+  container.innerHTML = ''
+  _render(vnode, container)
+}
+
+function _render(vnode, container) {
+  if (typeof vnode === 'string' || typeof vnode === 'number') { //如果是 string 或者 nubmer 都去创建文本节点
+    return container.appendChild(document.createTextNode(vnode))
+  }
+
+  if (typeof vnode === 'object') {
+    let dom = document.createElement(vnode.tag)
+    setAttribute(dom, vnode.attrs)
+    if (vnode.children && Array.isArray(vnode.children)) {
+      vnode.children.forEach(vnodeChild => {
+        _render(vnodeChild, dom) //记得这里是 _render , 这里的逻辑是不清空的
+      })
+    }
+
+    container.appendChild(dom)
+  }
+}
+
+function setAttribute(dom, attrs) {
+  for (let key in attrs) {
+    if (/^on/.test(key)) { //对事件绑定的处理，以 on 开头的，dom[onclick] = attrs[onClick]
+      dom[key.toLocaleLowerCase()] = attrs[key]
+    } else if (key === 'style') { //对 style 的处理
+      Object.assign(dom.style, attrs[key]) //新增的会赋值到 dom.style 上，同名的属性会覆盖
+    } else { //其他的直接作为 dom 的属性
+      dom[key] = attrs[key]
+    }
+  }
+}
+
+export default {
+  render
+}
+```
+
+index.js 业务代码
+
+```
+import Jreact from './lib/jreact' 
+import JreactDOM from './lib/jreact-dom'
+
+let num = 0
+let timer = null
+let styleObj = {
+  color: 'red',
+  fontSize: '20px'
+}
+
+onStart() //一开始时执行
+
+function onStart() {
+  console.log('click me')
+  timer = setInterval(() => { //启动时，每秒钟计时一次，做一次渲染
+    num++
+    JreactDOM.render((
+      <div className="wrapper">
+        <h1 style = { styleObj }>Number: { num }</h1>
+        <button onClick = { onStart }>start</button>
+        <button onClick = { onPause }>pause</button>
+      </div>
+    ), document.querySelector('#app'))
+  }, 1000)
+}
+
+function onPause() {
+  clearInterval(timer) //点击停止时，清除定时器
+}
+```
+
+进入到 chapter-2 目录下，运行`npx parcel index.html`,正常运行。
+
+以上完成了代码的拆分，实现了模块化。
+
+
+### 实现 React 组件
+
 
 
 
