@@ -14,18 +14,28 @@ class App extends Jreact.Component {
     return (
       <div className="wrapper">
         <h1 className="title">hello <span>{ this.state.name }</span></h1>
-        <Job job={ this.state.job }></Job>
+        <p>hobby: { this.state.hobby }</p>
+        <Job job={ this.state.job } onModifyJob = { this.onModifyJob.bind(this) }></Job>
         <Hobby hobby={ this.state.hobby }></Hobby>
       </div>
     )
+  }
+  onModifyJob(newJob) {
+    this.setState({job: newJob})
   }
 }
 
 class Job extends Jreact.Component {
   render() {
     return (
-      <div className="job">我的工作是{ this.props.job }</div>
+      <div className="job">
+        我的工作是{ this.props.job }
+        <button onClick = { this.modifyJob.bind(this) }>修改工作</button>
+      </div>
     )
+  }
+  modifyJob() {
+    this.props.onModifyJob('React工程师')
   }
 }
 

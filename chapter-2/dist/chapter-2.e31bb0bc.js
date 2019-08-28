@@ -117,48 +117,7 @@ parcelRequire = (function (modules, cache, entry, globalName) {
   }
 
   return newRequire;
-})({"lib/jreact.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function createElement(tag, attrs) {
-  for (var _len = arguments.length, children = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
-    children[_key - 2] = arguments[_key];
-  }
-
-  return {
-    tag: tag,
-    attrs: attrs,
-    children: children
-  };
-}
-
-var Component = function Component(props) {
-  _classCallCheck(this, Component);
-
-  this.props = props; //构造组件时，需要一些属性
-
-  this.state = {}; //组件内部有些状态/变量
-
-  renderComponent(); //创建组件后，需要去渲染这个组件（变成真实的DOM放到页面上）
-};
-
-function renderComponent() {
-  console.log('renderComponent');
-}
-
-var _default = {
-  createElement: createElement,
-  Component: Component
-};
-exports.default = _default;
-},{}],"lib/jreact-dom.js":[function(require,module,exports) {
+})({"lib/jreact-dom.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -258,7 +217,67 @@ var _default = {
   render: render
 };
 exports.default = _default;
-},{"./jreact":"lib/jreact.js"}],"index.js":[function(require,module,exports) {
+},{"./jreact":"lib/jreact.js"}],"lib/jreact.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _jreactDom = _interopRequireDefault(require("./jreact-dom"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function createElement(tag, attrs) {
+  for (var _len = arguments.length, children = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
+    children[_key - 2] = arguments[_key];
+  }
+
+  return {
+    tag: tag,
+    attrs: attrs,
+    children: children
+  };
+}
+
+var Component =
+/*#__PURE__*/
+function () {
+  function Component(props) {
+    _classCallCheck(this, Component);
+
+    this.props = props; //构造组件时，需要一些属性
+
+    this.state = {}; //组件内部有些状态/变量
+
+    renderComponent(); //创建组件后，需要去渲染这个组件（变成真实的DOM放到页面上）
+  }
+
+  _createClass(Component, [{
+    key: "setState",
+    value: function setState(state) {
+      this.state = Object.assign(this.state, state); //额外的新增或修改，不是覆盖，所以用 Object.assign
+
+      _jreactDom.default.renderComponent(this);
+    }
+  }]);
+
+  return Component;
+}();
+
+var _default = {
+  createElement: createElement,
+  Component: Component
+};
+exports.default = _default;
+},{"./jreact-dom":"lib/jreact-dom.js"}],"index.js":[function(require,module,exports) {
 "use strict";
 
 var _jreact = _interopRequireDefault(require("./lib/jreact"));
@@ -311,11 +330,19 @@ function (_Jreact$Component) {
         className: "wrapper"
       }, _jreact.default.createElement("h1", {
         className: "title"
-      }, "hello ", _jreact.default.createElement("span", null, this.state.name)), _jreact.default.createElement(Job, {
-        job: this.state.job
+      }, "hello ", _jreact.default.createElement("span", null, this.state.name)), _jreact.default.createElement("p", null, "hobby: ", this.state.hobby), _jreact.default.createElement(Job, {
+        job: this.state.job,
+        onModifyJob: this.onModifyJob.bind(this)
       }), _jreact.default.createElement(Hobby, {
         hobby: this.state.hobby
       }));
+    }
+  }, {
+    key: "onModifyJob",
+    value: function onModifyJob(newJob) {
+      this.setState({
+        job: newJob
+      });
     }
   }]);
 
@@ -338,7 +365,14 @@ function (_Jreact$Component2) {
     value: function render() {
       return _jreact.default.createElement("div", {
         className: "job"
-      }, "\u6211\u7684\u5DE5\u4F5C\u662F", this.props.job);
+      }, "\u6211\u7684\u5DE5\u4F5C\u662F", this.props.job, _jreact.default.createElement("button", {
+        onClick: this.modifyJob.bind(this)
+      }, "\u4FEE\u6539\u5DE5\u4F5C"));
+    }
+  }, {
+    key: "modifyJob",
+    value: function modifyJob() {
+      this.props.onModifyJob('React工程师');
     }
   }]);
 

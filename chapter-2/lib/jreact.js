@@ -1,3 +1,5 @@
+import jreactDom from "./jreact-dom";
+
 function createElement(tag, attrs, ...children) { 
   return {
     tag,
@@ -13,10 +15,11 @@ class Component {
 
     renderComponent() //创建组件后，需要去渲染这个组件（变成真实的DOM放到页面上）
   }
-}
 
-function renderComponent() {
-  console.log('renderComponent')
+  setState(state) {
+    this.state = Object.assign(this.state, state) //额外的新增或修改，不是覆盖，所以用 Object.assign
+    jreactDom.renderComponent(this)
+  }
 }
 
 export default {

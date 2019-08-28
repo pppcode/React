@@ -992,7 +992,14 @@ function createComponent(constructor, attrs) {
 
 ![function组件显示效果](https://github.com/pppcode/React/blob/master/images/function组件显示效果.jpg)
 
-**子组件绑定事件**
+**继续完善，子组件绑定事件，去修改父组件数据**
+
+在子组件里绑定事件，点击修改按钮，触发事件，执行回调（通过父组件传递过来的事件属性），在父组件中定义回调函数
+
+状态改变时，组件重新渲染（走之前的流程，逻辑写到 createComponent 里，而不是 jreact.js 中），做一个虚拟 dom 的替换，把以前的 dom 节点替换掉。
+
+抽离出 renderComponent
+
 
 
 
