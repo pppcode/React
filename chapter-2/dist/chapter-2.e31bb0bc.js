@@ -154,10 +154,10 @@ function createDomfromVnode(vnode) {
   if (_typeof(vnode) === 'object') {
     if (typeof vnode.tag === 'function') {
       //当 vnode.tag 是个函数时，就去创建组件
-      var _dom = createComponent(vnode.tag, vnode.attrs); //第一个参数是构造函数名，第二个参数是组件的属性
+      var component = createComponent(vnode.tag, vnode.attrs); //第一个参数是构造函数名，第二个参数是组件的属性
 
-
-      return _dom;
+      renderComponent(component);
+      return component.$root;
     }
 
     var dom = document.createElement(vnode.tag);
@@ -191,11 +191,19 @@ function createComponent(constructor, attrs) {
     };
   }
 
-  var vnode = component.render(); //c.push(component)
+  return component;
+} //渲染组件
 
+
+function renderComponent(component) {
+  var vnode = component.render();
   var dom = createDomfromVnode(vnode);
+
+  if (component.$root && component.$root.parentNode) {
+    component.$root.parentNode.replaceChild(dom, component.$root);
+  }
+
   component.$root = dom;
-  return dom;
 }
 
 function setAttribute(dom, attrs) {
@@ -214,7 +222,8 @@ function setAttribute(dom, attrs) {
 }
 
 var _default = {
-  render: render
+  render: render,
+  renderComponent: renderComponent
 };
 exports.default = _default;
 },{"./jreact":"lib/jreact.js"}],"lib/jreact.js":[function(require,module,exports) {
@@ -256,8 +265,6 @@ function () {
     this.props = props; //构造组件时，需要一些属性
 
     this.state = {}; //组件内部有些状态/变量
-
-    renderComponent(); //创建组件后，需要去渲染这个组件（变成真实的DOM放到页面上）
   }
 
   _createClass(Component, [{

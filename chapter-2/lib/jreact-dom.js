@@ -20,8 +20,9 @@ function createDomfromVnode(vnode) {
 
   if (typeof vnode === 'object') {
     if(typeof vnode.tag === 'function') { //当 vnode.tag 是个函数时，就去创建组件
-      let dom = createComponent(vnode.tag, vnode.attrs) //第一个参数是构造函数名，第二个参数是组件的属性
-      return dom
+      let component = createComponent(vnode.tag, vnode.attrs) //第一个参数是构造函数名，第二个参数是组件的属性
+      renderComponent(component)
+      return component.$root
     }
 
     let dom = document.createElement(vnode.tag)
@@ -47,12 +48,18 @@ function createComponent(constructor, attrs) {
       return this.constructor(attrs)
     }
   }
-  let vnode = component.render() 
-  //c.push(component)
+  return component
+}
 
-  let dom = createDomfromVnode(vnode) 
-  component.$root = dom 
-  return dom
+//渲染组件
+function renderComponent(component) {
+  let vnode = component.render()
+  let dom = createDomfromVnode(vnode)
+
+  if(component.$root && component.$root.parentNode) {
+    component.$root.parentNode.replaceChild(dom, component.$root)
+  }
+  component.$root = dom
 }
 
 function setAttribute(dom, attrs) {
@@ -68,5 +75,6 @@ function setAttribute(dom, attrs) {
 }
 
 export default {
-  render
+  render,
+  renderComponent
 }

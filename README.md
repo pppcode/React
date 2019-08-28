@@ -996,9 +996,210 @@ function createComponent(constructor, attrs) {
 
 在子组件里绑定事件，点击修改按钮，触发事件，执行回调（通过父组件传递过来的事件属性），在父组件中定义回调函数
 
-状态改变时，组件重新渲染（走之前的流程，逻辑写到 createComponent 里，而不是 jreact.js 中），做一个虚拟 dom 的替换，把以前的 dom 节点替换掉。
+```
+class App extends Jreact.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      name: '张三',
+      job: '后端工程师',
+      hobby: '看电影'
+    }
+  }
+  render() {
+    return (
+      <div className="wrapper">
+        <h1 className="title">hello <span>{ this.state.name }</span></h1>
+        <p>hobby: { this.state.hobby }</p>
+        <Job job={ this.state.job } onModifyJob = { this.onModifyJob.bind(this) }></Job>
+        <Hobby hobby={ this.state.hobby }></Hobby>
+      </div>
+    )
+  }
+  onModifyJob(newJob) {
+    this.setState({job: newJob})
+  }
+}
 
-抽离出 renderComponent
+class Job extends Jreact.Component {
+  render() {
+    return (
+      <div className="job">
+        我的工作是{ this.props.job }
+        <button onClick = { this.modifyJob.bind(this) }>修改工作</button>
+      </div>
+    )
+  }
+  modifyJob() {
+    this.props.onModifyJob('React工程师')
+  }
+}
+```
+
+数据改变时，组件重新渲染（走之前的流程，逻辑写到 createComponent 里，而不是 jreact.js 中），做一个虚拟 dom 的替换，把以前的 dom 节点替换掉。
+
+先拆分 createComponent，因为里面包含了'创建''渲染'两部分逻辑，抽离出'渲染'逻辑（renderComponent）
+
+```
+//创建组件
+function createComponent(constructor, attrs) {
+  let component
+  if(constructor.prototype instanceof Jreact.Component) {
+    component = new constructor(attrs) 
+  } else {
+    component = new Jreact.Component(attrs) //使组件具有 state， props
+    component.constructor = constructor
+    component.render = function() { //增加 render 方法
+      return this.constructor(attrs)
+    }
+  }
+  return component
+}
+
+//渲染组件
+function renderComponent(component) {
+  let vnode = component.render()
+  let dom = createDomfromVnode(vnode)
+
+  //修改后的 dom 做替换
+}
+```
+
+修改后的 dom 替换的逻辑
+
+```
+//渲染组件
+function renderComponent(component) {
+  ...
+
+  if(component.$root && component.$root.parentNode) {
+    component.$root.parentNode.replaceChild(dom, component.$root)
+  }
+  component.$root = dom
+}
+```
+
+完整代码
+
+jreact-dom.js
+
+```
+import Jreact from './jreact'
+
+function render(vnode, container) { //每次调用 render 时，先把之前的清空
+  container.innerHTML = ''
+  console.log(vnode)
+  _render(vnode, container)
+}
+
+function _render(vnode, container) {
+  let dom = createDomfromVnode(vnode)
+  container.appendChild(dom)
+}
+
+
+//window.c = []
+function createDomfromVnode(vnode) {
+  if (typeof vnode === 'string' || typeof vnode === 'number') { //如果是 string 或者 nubmer 都去创建文本节点
+    return document.createTextNode(vnode)
+  }
+
+  if (typeof vnode === 'object') {
+    if(typeof vnode.tag === 'function') { //当 vnode.tag 是个函数时，就去创建组件
+      let component = createComponent(vnode.tag, vnode.attrs) //第一个参数是构造函数名，第二个参数是组件的属性
+      renderComponent(component)
+      return component.$root
+    }
+
+    let dom = document.createElement(vnode.tag)
+    setAttribute(dom, vnode.attrs)
+    if (vnode.children && Array.isArray(vnode.children)) {
+      vnode.children.forEach(vnodeChild => {
+        _render(vnodeChild, dom) //记得这里是 _render , 这里的逻辑是不清空的
+      })
+    }
+    return dom
+  }
+}
+
+//创建组件
+function createComponent(constructor, attrs) {
+  let component
+  if(constructor.prototype instanceof Jreact.Component) {
+    component = new constructor(attrs) 
+  } else {
+    component = new Jreact.Component(attrs) //使组件具有 state， props
+    component.constructor = constructor
+    component.render = function() { //增加 render 方法
+      return this.constructor(attrs)
+    }
+  }
+  return component
+}
+
+//渲染组件
+function renderComponent(component) {
+  let vnode = component.render()
+  let dom = createDomfromVnode(vnode)
+
+  if(component.$root && component.$root.parentNode) {
+    component.$root.parentNode.replaceChild(dom, component.$root)
+  }
+  component.$root = dom
+}
+
+function setAttribute(dom, attrs) {
+  for (let key in attrs) {
+    if (/^on/.test(key)) { //对事件绑定的处理，以 on 开头的，dom[onclick] = attrs[onClick]
+      dom[key.toLocaleLowerCase()] = attrs[key]
+    } else if (key === 'style') { //对 style 的处理
+      Object.assign(dom.style, attrs[key]) //新增的会赋值到 dom.style 上，同名的属性会覆盖
+    } else { //其他的直接作为 dom 的属性
+      dom[key] = attrs[key]
+    }
+  }
+}
+
+export default {
+  render,
+  renderComponent
+}
+```
+
+jreact.js
+
+```
+import jreactDom from "./jreact-dom";
+
+function createElement(tag, attrs, ...children) { 
+  return {
+    tag,
+    attrs,
+    children
+  }
+}
+
+class Component { 
+  constructor(props) {
+    this.props = props //构造组件时，需要一些属性
+    this.state = {} //组件内部有些状态/变量
+  }
+
+  setState(state) {
+    this.state = Object.assign(this.state, state) //额外的新增或修改，不是覆盖，所以用 Object.assign
+    jreactDom.renderComponent(this)
+  }
+}
+
+export default {
+  createElement,
+  Component
+}
+```
+显示
+
+![子组件修改父组件数据](https://github.com/pppcode/React/blob/master/images/子组件修改父组件数据.jpg)
+
 
 
 
