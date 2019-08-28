@@ -1200,6 +1200,9 @@ export default {
 
 ![子组件修改父组件数据](https://github.com/pppcode/React/blob/master/images/子组件修改父组件数据.jpg)
 
+以上实现了 React 的基本功能(用法)，但是 dom 的更新是全局更新的（以组件的方式去更新的）App里的数据发生改变，会去渲染所有的组件，DOM 的频繁操作开销是很大的，可以精细化操作，比如修改了 name 数据，对应的 DOM 只去修改对应的那一部分即可（h1 中的 span 即可）
+
+虚拟 DOM 的 diff，修改对应的状态时，重新调用 renderComponent 重新执行 JSX,得到新的虚拟 DOM ,再去执行自己的 render 方法，渲染到页面上，渲染的过程中，新的和之前的虚拟 DOM 做个对比，发现只有微小的差异，只更新这部分，开销就变小了，性能就优化了
 
 
 
