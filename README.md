@@ -705,10 +705,137 @@ function onPause() {
 
 进入到 chapter-2 目录下，运行`npx parcel index.html`,正常运行。
 
+![模块化后显示效果](https://github.com/pppcode/React/blob/master/images/模块化后显示效果.jpg)
+
 以上完成了代码的拆分，实现了模块化。
 
 
 ### 实现 React 组件
+
+实现以下这种书写方式
+
+```
+import Jreact from './lib/jreact' 
+import JreactDOM from './lib/jreact-dom'
+
+class App extends Jreact.Component { 
+  render() {
+    return (
+      <h1>hello</h1>
+    )
+  }
+}
+
+JreactDOM.render(<App/>, document.querySelector('#app'))
+```
+
+用 babel 转换 
+
+- `<App/> `得到`React.createElement(App, null);`
+- `<app>hello</app>`得到`React.createElement("app", null, "hello");`
+
+`<App/> `首字母大写，转义后，参数 App 是一个变量，并不是字符串（标签），所以自定义的组件必须首字符大写，JSX 语法规定的，这样才会当做变量去处理，这个 App 可以做一些事情了。
+
+JSX 经过处理后得到的虚拟 DOM 的第一个参数是一个变量（render 是处理标签，字符串的），用这个变量去创建一个对象，创造自己的组件，这里稍微有些复杂，先实现其他部分。
+
+所有的组件都继承了 Jreact.Component, 所以先定义 Component
+
+jreact.js
+
+```
+...
+class Component { 
+  constructor(props) {
+    this.props = props //构造组件时，需要一些属性
+    this.state = {} //组件内部有些状态/变量
+
+    renderComponent() //创建组件后，需要去渲染这个组件（变成真实的DOM放到页面上）
+  }
+}
+
+function renderComponent() {
+  console.log('renderComponent')
+}
+
+export default {
+  createElement,
+  Component
+}
+```
+
+**变成虚拟 DOM 后，如何去渲染呢，遇到组件时，_render 如何处理呢？**
+
+先构造一个复杂的组件
+
+index.js
+```
+import Jreact from './lib/jreact'
+import JreactDOM from './lib/jreact-dom'
+
+//得到了 Component 中的 props,render方法
+// new App 时，就会去渲染组件
+class App extends Jreact.Component {
+  render() {
+    return (
+      <div className="wrapper">
+        <h1 className="title">hello <span>张三</span></h1>
+        <Job></Job>
+      </div>
+    )
+  }
+}
+
+class Job extends Jreact.Component {
+  render() {
+    return (
+      <div className="job">我的工作是前端工程师</div>
+    )
+  }
+}
+
+JreactDOM.render(<App></App>, document.querySelector('#app'))
+```
+
+_render 处理 vnode,把 vnode 打印出来
+
+![vnode](https://github.com/pppcode/React/blob/master/images/vnode.jpg)
+
+发现 App 的 tag 是一个函数，所以渲染虚拟 DOM 时，就需要创建这个函数，最终返回一个真实的 DOM 节点，并挂载到页面上
+
+jreact-dom.js
+
+```
+...
+function _render(vnode, container) {
+  console.log(vnode)
+  if(typeof vnode === 'function') { //当 vnode 是个函数时，就去创造一个组件
+    let dom = createComponent(vnode.tag, vnode.attrs) //第一个参数是构造函数名，第二个参数是组件的属性
+    return container.appendChild(dom) //返回的是一个真实的 DOM 节点，挂载到容器上
+  }
+  //...
+}
+...
+```
+
+**如何创造这个组件呢**
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

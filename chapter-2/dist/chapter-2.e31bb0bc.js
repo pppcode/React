@@ -125,6 +125,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
 function createElement(tag, attrs) {
   for (var _len = arguments.length, children = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
     children[_key - 2] = arguments[_key];
@@ -137,8 +139,23 @@ function createElement(tag, attrs) {
   };
 }
 
+var Component = function Component(props) {
+  _classCallCheck(this, Component);
+
+  this.props = props; //构造组件时，需要一些属性
+
+  this.state = {}; //组件内部有些状态/变量
+
+  renderComponent(); //创建组件后，需要去渲染这个组件（变成真实的DOM放到页面上）
+};
+
+function renderComponent() {
+  console.log('renderComponent');
+}
+
 var _default = {
-  createElement: createElement
+  createElement: createElement,
+  Component: Component
 };
 exports.default = _default;
 },{}],"lib/jreact-dom.js":[function(require,module,exports) {
@@ -154,30 +171,44 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 function render(vnode, container) {
   //每次调用 render 时，先把之前的清空
   container.innerHTML = '';
+  console.log(vnode);
 
   _render(vnode, container);
 }
 
 function _render(vnode, container) {
+  console.log(vnode);
+
+  if (typeof vnode === 'function') {
+    //当 vnode 是个函数时，就去创造一个组件
+    var dom = createComponent(vnode.tag, vnode.attrs); //第一个参数是构造函数名，第二个参数是组件的属性
+
+    return container.appendChild(dom); //返回的是一个真实的 DOM 节点，挂载到容器上
+  }
+
   if (typeof vnode === 'string' || typeof vnode === 'number') {
     //如果是 string 或者 nubmer 都去创建文本节点
     return container.appendChild(document.createTextNode(vnode));
   }
 
   if (_typeof(vnode) === 'object') {
-    var dom = document.createElement(vnode.tag);
-    setAttribute(dom, vnode.attrs);
+    var _dom = document.createElement(vnode.tag);
+
+    setAttribute(_dom, vnode.attrs);
 
     if (vnode.children && Array.isArray(vnode.children)) {
       vnode.children.forEach(function (vnodeChild) {
-        _render(vnodeChild, dom); //记得这里是 _render , 这里的逻辑是不清空的
+        _render(vnodeChild, _dom); //记得这里是 _render , 这里的逻辑是不清空的
 
       });
     }
 
-    container.appendChild(dom);
+    container.appendChild(_dom);
   }
-}
+} //创建组件
+
+
+function Component(constructor, attrs) {}
 
 function setAttribute(dom, attrs) {
   for (var key in attrs) {
@@ -207,35 +238,75 @@ var _jreactDom = _interopRequireDefault(require("./lib/jreact-dom"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var num = 0;
-var timer = null;
-var styleObj = {
-  color: 'red',
-  fontSize: '20px'
-};
-onStart(); //一开始时执行
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
-function onStart() {
-  console.log('click me');
-  timer = setInterval(function () {
-    //启动时，每秒钟计时一次，做一次渲染
-    num++;
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-    _jreactDom.default.render(_jreact.default.createElement("div", {
-      className: "wrapper"
-    }, _jreact.default.createElement("h1", {
-      style: styleObj
-    }, "Number: ", num), _jreact.default.createElement("button", {
-      onClick: onStart
-    }, "start"), _jreact.default.createElement("button", {
-      onClick: onPause
-    }, "pause")), document.querySelector('#app'));
-  }, 1000);
-}
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
-function onPause() {
-  clearInterval(timer); //点击停止时，清除定时器
-}
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
+
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+
+//得到了 Component 中的 props,render方法
+// new App 时，就会去渲染组件
+var App =
+/*#__PURE__*/
+function (_Jreact$Component) {
+  _inherits(App, _Jreact$Component);
+
+  function App() {
+    _classCallCheck(this, App);
+
+    return _possibleConstructorReturn(this, _getPrototypeOf(App).apply(this, arguments));
+  }
+
+  _createClass(App, [{
+    key: "render",
+    value: function render() {
+      return _jreact.default.createElement("div", {
+        className: "wrapper"
+      }, _jreact.default.createElement("h1", {
+        className: "title"
+      }, "hello ", _jreact.default.createElement("span", null, "\u5F20\u4E09")), _jreact.default.createElement(Job, null));
+    }
+  }]);
+
+  return App;
+}(_jreact.default.Component);
+
+var Job =
+/*#__PURE__*/
+function (_Jreact$Component2) {
+  _inherits(Job, _Jreact$Component2);
+
+  function Job() {
+    _classCallCheck(this, Job);
+
+    return _possibleConstructorReturn(this, _getPrototypeOf(Job).apply(this, arguments));
+  }
+
+  _createClass(Job, [{
+    key: "render",
+    value: function render() {
+      return _jreact.default.createElement("div", {
+        className: "job"
+      }, "\u6211\u7684\u5DE5\u4F5C\u662F\u524D\u7AEF\u5DE5\u7A0B\u5E08");
+    }
+  }]);
+
+  return Job;
+}(_jreact.default.Component);
+
+_jreactDom.default.render(_jreact.default.createElement(App, null), document.querySelector('#app'));
 },{"./lib/jreact":"lib/jreact.js","./lib/jreact-dom":"lib/jreact-dom.js"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
