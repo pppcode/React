@@ -1,14 +1,21 @@
 import Jreact from './lib/jreact'
 import JreactDOM from './lib/jreact-dom'
 
-//得到了 Component 中的 props,render方法
-// new App 时，就会去渲染组件
 class App extends Jreact.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      name: '张三',
+      job: '后端工程师',
+      hobby: '看电影'
+    }
+  }
   render() {
     return (
       <div className="wrapper">
-        <h1 className="title">hello <span>张三</span></h1>
-        <Job></Job>
+        <h1 className="title">hello <span>{ this.state.name }</span></h1>
+        <Job job={ this.state.job }></Job>
+        <Hobby hobby={ this.state.hobby }></Hobby>
       </div>
     )
   }
@@ -17,9 +24,17 @@ class App extends Jreact.Component {
 class Job extends Jreact.Component {
   render() {
     return (
-      <div className="job">我的工作是前端工程师</div>
+      <div className="job">我的工作是{ this.props.job }</div>
     )
   }
 }
+
+//组件的其他写法
+function Hobby(props) {
+  return (
+    <p>我的兴趣是{ props.hobby }</p>
+  )
+}
+
 
 JreactDOM.render(<App></App>, document.querySelector('#app'))

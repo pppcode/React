@@ -166,6 +166,10 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
+var _jreact = _interopRequireDefault(require("./jreact"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function render(vnode, container) {
@@ -177,38 +181,63 @@ function render(vnode, container) {
 }
 
 function _render(vnode, container) {
-  console.log(vnode);
+  var dom = createDomfromVnode(vnode);
+  container.appendChild(dom);
+} //window.c = []
 
-  if (typeof vnode === 'function') {
-    //当 vnode 是个函数时，就去创造一个组件
-    var dom = createComponent(vnode.tag, vnode.attrs); //第一个参数是构造函数名，第二个参数是组件的属性
 
-    return container.appendChild(dom); //返回的是一个真实的 DOM 节点，挂载到容器上
-  }
-
+function createDomfromVnode(vnode) {
   if (typeof vnode === 'string' || typeof vnode === 'number') {
     //如果是 string 或者 nubmer 都去创建文本节点
-    return container.appendChild(document.createTextNode(vnode));
+    return document.createTextNode(vnode);
   }
 
   if (_typeof(vnode) === 'object') {
-    var _dom = document.createElement(vnode.tag);
+    if (typeof vnode.tag === 'function') {
+      //当 vnode.tag 是个函数时，就去创建组件
+      var _dom = createComponent(vnode.tag, vnode.attrs); //第一个参数是构造函数名，第二个参数是组件的属性
 
-    setAttribute(_dom, vnode.attrs);
+
+      return _dom;
+    }
+
+    var dom = document.createElement(vnode.tag);
+    setAttribute(dom, vnode.attrs);
 
     if (vnode.children && Array.isArray(vnode.children)) {
       vnode.children.forEach(function (vnodeChild) {
-        _render(vnodeChild, _dom); //记得这里是 _render , 这里的逻辑是不清空的
+        _render(vnodeChild, dom); //记得这里是 _render , 这里的逻辑是不清空的
 
       });
     }
 
-    container.appendChild(_dom);
+    return dom;
   }
 } //创建组件
 
 
-function Component(constructor, attrs) {}
+function createComponent(constructor, attrs) {
+  var component;
+
+  if (constructor.prototype instanceof _jreact.default.Component) {
+    component = new constructor(attrs);
+  } else {
+    component = new _jreact.default.Component(attrs); //使组件具有 state， props
+
+    component.constructor = constructor;
+
+    component.render = function () {
+      //增加 render 方法
+      return this.constructor(attrs);
+    };
+  }
+
+  var vnode = component.render(); //c.push(component)
+
+  var dom = createDomfromVnode(vnode);
+  component.$root = dom;
+  return dom;
+}
 
 function setAttribute(dom, attrs) {
   for (var key in attrs) {
@@ -229,7 +258,7 @@ var _default = {
   render: render
 };
 exports.default = _default;
-},{}],"index.js":[function(require,module,exports) {
+},{"./jreact":"lib/jreact.js"}],"index.js":[function(require,module,exports) {
 "use strict";
 
 var _jreact = _interopRequireDefault(require("./lib/jreact"));
@@ -256,17 +285,23 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
 
-//得到了 Component 中的 props,render方法
-// new App 时，就会去渲染组件
 var App =
 /*#__PURE__*/
 function (_Jreact$Component) {
   _inherits(App, _Jreact$Component);
 
-  function App() {
+  function App(props) {
+    var _this;
+
     _classCallCheck(this, App);
 
-    return _possibleConstructorReturn(this, _getPrototypeOf(App).apply(this, arguments));
+    _this = _possibleConstructorReturn(this, _getPrototypeOf(App).call(this, props));
+    _this.state = {
+      name: '张三',
+      job: '后端工程师',
+      hobby: '看电影'
+    };
+    return _this;
   }
 
   _createClass(App, [{
@@ -276,7 +311,11 @@ function (_Jreact$Component) {
         className: "wrapper"
       }, _jreact.default.createElement("h1", {
         className: "title"
-      }, "hello ", _jreact.default.createElement("span", null, "\u5F20\u4E09")), _jreact.default.createElement(Job, null));
+      }, "hello ", _jreact.default.createElement("span", null, this.state.name)), _jreact.default.createElement(Job, {
+        job: this.state.job
+      }), _jreact.default.createElement(Hobby, {
+        hobby: this.state.hobby
+      }));
     }
   }]);
 
@@ -299,12 +338,17 @@ function (_Jreact$Component2) {
     value: function render() {
       return _jreact.default.createElement("div", {
         className: "job"
-      }, "\u6211\u7684\u5DE5\u4F5C\u662F\u524D\u7AEF\u5DE5\u7A0B\u5E08");
+      }, "\u6211\u7684\u5DE5\u4F5C\u662F", this.props.job);
     }
   }]);
 
   return Job;
-}(_jreact.default.Component);
+}(_jreact.default.Component); //组件的其他写法
+
+
+function Hobby(props) {
+  return _jreact.default.createElement("p", null, "\u6211\u7684\u5174\u8DA3\u662F", props.hobby);
+}
 
 _jreactDom.default.render(_jreact.default.createElement(App, null), document.querySelector('#app'));
 },{"./lib/jreact":"lib/jreact.js","./lib/jreact-dom":"lib/jreact-dom.js"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
@@ -335,7 +379,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59263" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59162" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

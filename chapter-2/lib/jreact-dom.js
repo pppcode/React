@@ -1,3 +1,5 @@
+import Jreact from './jreact'
+
 function render(vnode, container) { //每次调用 render 时，先把之前的清空
   container.innerHTML = ''
   console.log(vnode)
@@ -5,17 +7,23 @@ function render(vnode, container) { //每次调用 render 时，先把之前的�
 }
 
 function _render(vnode, container) {
-  console.log(vnode)
-  if(typeof vnode === 'function') { //当 vnode 是个函数时，就去创造一个组件
-    let dom = createComponent(vnode.tag, vnode.attrs) //第一个参数是构造函数名，第二个参数是组件的属性
-    return container.appendChild(dom) //返回的是一个真实的 DOM 节点，挂载到容器上
-  }
+  let dom = createDomfromVnode(vnode)
+  container.appendChild(dom)
+}
 
+
+//window.c = []
+function createDomfromVnode(vnode) {
   if (typeof vnode === 'string' || typeof vnode === 'number') { //如果是 string 或者 nubmer 都去创建文本节点
-    return container.appendChild(document.createTextNode(vnode))
+    return document.createTextNode(vnode)
   }
 
   if (typeof vnode === 'object') {
+    if(typeof vnode.tag === 'function') { //当 vnode.tag 是个函数时，就去创建组件
+      let dom = createComponent(vnode.tag, vnode.attrs) //第一个参数是构造函数名，第二个参数是组件的属性
+      return dom
+    }
+
     let dom = document.createElement(vnode.tag)
     setAttribute(dom, vnode.attrs)
     if (vnode.children && Array.isArray(vnode.children)) {
@@ -23,14 +31,28 @@ function _render(vnode, container) {
         _render(vnodeChild, dom) //记得这里是 _render , 这里的逻辑是不清空的
       })
     }
-
-    container.appendChild(dom)
+    return dom
   }
 }
 
 //创建组件
-function Component(constructor, attrs) {
+function createComponent(constructor, attrs) {
+  let component
+  if(constructor.prototype instanceof Jreact.Component) {
+    component = new constructor(attrs) 
+  } else {
+    component = new Jreact.Component(attrs) //使组件具有 state， props
+    component.constructor = constructor
+    component.render = function() { //增加 render 方法
+      return this.constructor(attrs)
+    }
+  }
+  let vnode = component.render() 
+  //c.push(component)
 
+  let dom = createDomfromVnode(vnode) 
+  component.$root = dom 
+  return dom
 }
 
 function setAttribute(dom, attrs) {

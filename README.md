@@ -807,17 +807,202 @@ jreact-dom.js
 ```
 ...
 function _render(vnode, container) {
-  console.log(vnode)
-  if(typeof vnode === 'function') { //当 vnode 是个函数时，就去创造一个组件
-    let dom = createComponent(vnode.tag, vnode.attrs) //第一个参数是构造函数名，第二个参数是组件的属性
-    return container.appendChild(dom) //返回的是一个真实的 DOM 节点，挂载到容器上
-  }
   //...
+  if (typeof vnode === 'object') {
+    if(typeof vnode.tag === 'function') { //当 vnode.tag 是个函数时，就去创造一个组件
+      let dom = createComponent(vnode.tag, vnode.attrs) //第一个参数是构造函数名，第二个参数是组件的属性
+      return container.appendChild(dom) //返回的是一个真实的 DOM 节点，挂载到容器上
+    }
+    //...
+  }
 }
 ...
 ```
 
 **如何创造这个组件呢**
+
+执行`JreactDOM.render(<App></App>, document.querySelector('#app'))`,调用 render 函数
+
+把 _render 中的渲染 vnode 的逻辑抽离出来，因为在渲染组件的过程中，还会再次渲染组件中的 JSX,抽离出来后，方便进行再次处理，否则就会执行两次'挂载到页面上'这部分逻辑了
+
+```
+...
+function _render(vnode, container) {
+  let dom = createDomfromVnode(vnode)
+  container.appendChild(dom)
+}
+
+function createDomfromVnode(vnode) {
+  if (typeof vnode === 'string' || typeof vnode === 'number') { //如果是 string 或者 nubmer 都去创建文本节点
+    return document.createTextNode(vnode)
+  }
+
+  if (typeof vnode === 'object') {
+    if(typeof vnode.tag === 'function') { //当 vnode.tag 是个函数时，就去创建组件
+      let dom = createComponent(vnode.tag, vnode.attrs) //第一个参数是构造函数名，第二个参数是组件的属性
+      return dom
+    }
+
+    let dom = document.createElement(vnode.tag)
+    setAttribute(dom, vnode.attrs)
+    if (vnode.children && Array.isArray(vnode.children)) {
+      vnode.children.forEach(vnodeChild => {
+        _render(vnodeChild, dom) //记得这里是 _render , 这里的逻辑是不清空的
+      })
+    }
+    return dom
+  }
+}
+
+//创建组件
+function createComponent(constructor, attrs) {
+  let component = new constructor(attrs) //创造一个组件对象
+  let vnode = component.render() //调用他的 render 方法，得到组件对应的虚拟节点(jsx)
+  let dom = createDomfromVnode(vnode) //渲染成真实的 DOM
+  component.$root = dom //方便后续拿到组件对应的真实的 DOM
+  return dom
+}
+...
+```
+
+页面显示
+
+![组件的显示效果](https://github.com/pppcode/React/blob/master/images/组件的显示效果.jpg)
+
+查看创建的组件
+
+```
+window.c = []
+function createComponent(constructor, attrs) {
+  let component = new constructor(attrs) //创造一个组件对象
+  c.push(component)
+  ...
+}
+```
+控制台输入`c`打印出
+
+![查看创建的组件](https://github.com/pppcode/React/blob/master/images/查看创建的组件.jpg)
+
+** state props 组件间通信，均正常显示**
+
+```
+import Jreact from './lib/jreact'
+import JreactDOM from './lib/jreact-dom'
+
+class App extends Jreact.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      name: '张三',
+      job: '后端工程师'
+    }
+  }
+  render() {
+    return (
+      <div className="wrapper">
+        <h1 className="title">hello <span>{ this.state.name }</span></h1>
+        <Job job={ this.state.job }></Job>
+      </div>
+    )
+  }
+}
+
+class Job extends Jreact.Component {
+  render() {
+    return (
+      <div className="job">我的工作是{ this.props.job }</div>
+    )
+  }
+}
+
+JreactDOM.render(<App></App>, document.querySelector('#app'))
+
+```
+显示
+
+![state和prop效果](https://github.com/pppcode/React/blob/master/images/state和prop效果.jpg)
+
+**组件的其他写法:function**
+
+```
+class App extends Jreact.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      name: '张三',
+      job: '后端工程师',
+      hobby: '看电影'
+    }
+  }
+  render() {
+    return (
+      <div className="wrapper">
+        //...
+        <Hobby hobby={ this.state.hobby }></Hobby>
+      </div>
+    )
+  }
+}
+
+function Hobby(props) {
+  return (
+    <p>我的兴趣是{ props.hobby }</p>
+  )
+}
+```
+
+以上代码会报错，`component.render is not a function`
+
+new 构造函数时（tag对应的函数），返回的是函数 return 出来的东西，所以执行 createComponent 时，componet 就是虚拟dom，上面没有 render方法，而这里把虚拟 dom 当成组件处理了
+
+**所以需要对两种组件的写法 Class , function，分别做处理**
+
+对 createComponent 做处理，判断 constructor 是什么类型，但是 Class function 都是函数（Class 是语法糖），如何判断呢
+
+思路：通过 Class 构造出来的组件是继承了 Component, function 构造出来的是没有继承的，通过这一点来做判断
+
+`xxx.prototype instanceof Component` 是 true 还是 false 判断是不是 Class
+
+jreact-dom.js
+
+```
+import Jreact from './jreact'
+...
+function createComponent(constructor, attrs) {
+  let component
+  if(constructor.prototype instanceof Jreact.Component) {
+    component = new constructor(attrs) 
+  } else {
+    component = new Jreact.Component(attrs) //使组件具有 state， props
+    component.constructor = constructor
+    component.render = function() { //增加 render 方法
+      return this.constructor(attrs)
+    }
+  }
+  let vnode = component.render() 
+  //c.push(component)
+
+  let dom = createDomfromVnode(vnode) 
+  component.$root = dom 
+  return dom
+}
+
+```
+显示
+
+![function组件显示效果](https://github.com/pppcode/React/blob/master/images/function组件显示效果.jpg)
+
+**子组件绑定事件**
+
+
+
+
+
+
+
+
+
+
 
 
 
