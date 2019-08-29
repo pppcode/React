@@ -2,9 +2,15 @@
 
 ## 项目介绍
 
-原生 JS 实现一个简易的 React , 并且使用此框架实现一个计数器功能。
+原生 JS 实现一个简易的 React , 并且实现基本功能（React 的基本用法）: 模块化，组件及组件间通信，setState 等功能
 
 ## 具体实现
+
+先看这张图，了解 React 的基本原理
+
+![React基本原理](https://github.com/pppcode/React/blob/master/images/React基本原理.jpg)
+
+根据这张图，实现其中的逻辑
 
 ### JSX 与虚拟DOM
 
@@ -1203,6 +1209,230 @@ export default {
 以上实现了 React 的基本功能(用法)，但是 dom 的更新是全局更新的（以组件的方式去更新的）App里的数据发生改变，会去渲染所有的组件，DOM 的频繁操作开销是很大的，可以精细化操作，比如修改了 name 数据，对应的 DOM 只去修改对应的那一部分即可（h1 中的 span 即可）
 
 虚拟 DOM 的 diff，修改对应的状态时，重新调用 renderComponent 重新执行 JSX,得到新的虚拟 DOM ,再去执行自己的 render 方法，渲染到页面上，渲染的过程中，新的和之前的虚拟 DOM 做个对比，发现只有微小的差异，只更新这部分，开销就变小了，性能就优化了
+
+### diff 算法
+
+实现的效果
+
+index.js
+
+```
+import Jreact from './lib/jreact.js'
+import JreactDOM from './lib/jreact-dom.js'
+
+class App extends Jreact.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      name: '小讲堂',
+      courses: ['数学', '语文', '英语'],
+      styleObj: {
+        color: 'red',
+        fontWeight: 'bold'
+      }
+    }
+  }
+
+  render() {
+    return (
+      <div className="container">
+        <h1>欢迎到<span className="name" style={ this.state.styleObj }>{ this.state.name }</span>来学习</h1>
+        <p>aaa</p>
+        <p>bbb</p>
+        <div className="action">
+          <button onClick = { this.modifyName.bind(this) }>修改名字</button>
+          <button onClick = { this.setStyle.bind(this) }>样式</button>
+        </div>
+      </div>
+    )
+  }
+
+  modifyName() {
+    let newName = window.prompt('输入标题','小讲堂')
+    this.setState({name: newName})
+  }
+
+  setStyle() {
+    this.setState({
+      styleObj: {
+        color: 'blue'
+      }
+    })
+  }
+}
+
+window.JreactDOM = JreactDOM
+
+JreactDOM.render(<App/>, document.querySelector('#app'))
+```
+
+**思路**
+
+第一次挂载到页面上时
+
+![第一次渲染时](https://github.com/pppcode/React/blob/master/images/第一次渲染时.jpg)
+
+修改后，让虚拟dom 和真实的DOM 对应起来，只修改要修改的东西
+
+![修改数据时](https://github.com/pppcode/React/blob/master/images/修改数据时.jpg)
+
+让标签，属性，子元素去做对比，第一个标签都是`div`,没有变动，属性都是`class-box`,也没有变动，所以 `<div class="box">`是可以保留的
+
+- 那么如何比较子元素呢？
+- 假设第一个标签变了，由`div`变成了`p`，该如何去处理呢？
+- 假设不是`div`，就是普通的文本做了修改，由`zhangsan`变为`lisi`,又该如何处理？
+
+处理以上这些场景，需要虚拟 DOM 和页面上的 DOM 做一一映射
+
+再捋一下思路
+
+1. JreactDOM.render JSX 时，调用 render 方法（之前是清空容器，根据 vnode 创建真实的 DOM,并挂载），调用 diff()，传递三个参数
+- 要对比的页面上的 DOM（第一次挂载时调用 render() 时，要对比的 DOM 并不存在，所以先传递一个 null，后续重新渲染页面时，调用 diff, 之前的 DOM 就有了）
+- 虚拟 DOM
+- 要挂载的容器
+
+2. 定义 diff 函数：拿页面上真实的 DOM 和一开始渲染好的和他对应的虚拟 DOM 对比，操作...,把修改后的部分和真实的部分做替换，替换之后，页面上上的 DOM 为最新修改后的，再返回出去，供其他地方使用
+
+```
+function diffNode(dom, vnode) {
+
+}
+```
+先看看 vnode 和 dom 有什么差别，先了解下虚拟 DOM 有哪几种类型：
+
+```
+{
+  tga: "div",
+  attrs: {className: "box"},
+  children: [
+    "hello",
+    {
+      tag: "span",
+      attrs: null,
+      children: [
+        "zhangsan"
+      ],
+      {
+        tag: Box //变量（函数），可以是组件
+        attrs: null,
+        children: []
+      }
+    }
+  ]
+}
+```
+
+有对象并且值为字符串的`{xx:'xxx'}` , 为字符串的`'hello'`，有对象并且值为变量的`{xx:Xxx}` ，3种类型
+
+**如何对这三种类型做比较呢？**
+
+虚拟 DOM 为字符串时
+
+![虚拟dom为字符串时](https://github.com/pppcode/React/blob/master/images/虚拟dom为字符串时.jpg)
+
+```
+function diffNode(dom, vnode) {
+  let patchedDom = dom
+
+  //如果是文本类型的虚拟DOM ，要么替换内容，要么替换元素
+  if (typeof vnode === 'string' || typeof vnode === 'number') {
+    if (patchedDom && patchedDom.nodeType === 3) { //真实DOM存在，并且是个字符串
+      if (patchedDom.textContent !== vnode) { // hello 不等于 'hello' 时
+        patchedDom.textContent = vnode //虚拟dom赋值给真实dom即可（修改）
+      }
+    } else { //若不是字符串，而是元素
+      patchedDom = document.createTextNode(vnode) //直接创建一个文本节点，替换掉该元素
+    }
+    return patchedDom
+  }
+}
+
+```
+
+虚拟 DOM 为组件时
+
+![虚拟dom为组件时](https://github.com/pppcode/React/blob/master/images/虚拟dom为组件时.jpg)
+
+```
+  //如果是组件，就diff组件
+  if (typeof vnode === 'object' && typeof vnode.tag === 'function') {
+    patchedDom = diffComponent(dom, vnode) //交给他去处理
+    return patchedDom
+  }
+```
+
+虚拟 DOM 新增时（真实 DOM 不存在）
+
+![虚拟dom新增时](https://github.com/pppcode/React/blob/master/images/虚拟dom新增时.jpg)
+
+```
+  //否则就是普通的 vnode
+  //看 dom 是不是存在，如果不存在就根据 vnode 创建
+  if (!dom) {
+    patchedDom = document.createElement(vnode.tag) //根据虚拟 dom 的标签去创造
+  }
+```
+
+虚拟 DOM 和真实 DOM 都为 tag，但是不相同时
+
+没有直接修改标签名的 api, 所以
+
+![都为tag但是不相同时](https://github.com/pppcode/React/blob/master/images/都为tag但是不相同时.jpg)
+
+```
+  //如果存在但标签变了，就修正标签（创建新标签的 dom ，但旧标签 dom 的孩子放到新标签 dom 里，旧标签替换成新标签）
+  if (dom && dom.nodeName.toLowerCase() !== vnode.tag.toLowerCase()) { 
+    patchedDom = document.createElement(vnode.tag)
+    dom.childNodes.forEach((child) => patchedDom.appendChild(child))
+    replaceDom(patchedDom, dom)
+  }
+```
+
+以上是对标签的比较。
+
+**对属性的比较**
+
+**对子元素的比较**
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+测试
+
+修改样式时，只有要修改的部分做了替换
+
+截图
+
+
+
+
+
 
 
 

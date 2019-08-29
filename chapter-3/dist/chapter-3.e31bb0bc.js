@@ -132,7 +132,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function render(vnode, container) {
-  //每次调用 render 时，先把之前的清空
   container.innerHTML = '';
   console.log(vnode);
 
@@ -142,21 +141,16 @@ function render(vnode, container) {
 function _render(vnode, container) {
   var dom = createDomfromVnode(vnode);
   container.appendChild(dom);
-} //window.c = []
-
+}
 
 function createDomfromVnode(vnode) {
   if (typeof vnode === 'string' || typeof vnode === 'number') {
-    //如果是 string 或者 nubmer 都去创建文本节点
     return document.createTextNode(vnode);
   }
 
   if (_typeof(vnode) === 'object') {
     if (typeof vnode.tag === 'function') {
-      //当 vnode.tag 是个函数时，就去创建组件
-      var component = createComponent(vnode.tag, vnode.attrs); //第一个参数是构造函数名，第二个参数是组件的属性
-
-      renderComponent(component);
+      var component = createComponent(vnode.tag, vnode.attrs);
       return component.$root;
     }
 
@@ -165,15 +159,13 @@ function createDomfromVnode(vnode) {
 
     if (vnode.children && Array.isArray(vnode.children)) {
       vnode.children.forEach(function (vnodeChild) {
-        _render(vnodeChild, dom); //记得这里是 _render , 这里的逻辑是不清空的
-
+        _render(vnodeChild, dom);
       });
     }
 
     return dom;
   }
-} //创建组件
-
+}
 
 function createComponent(constructor, attrs) {
   var component;
@@ -181,19 +173,16 @@ function createComponent(constructor, attrs) {
   if (constructor.prototype instanceof _jreact.default.Component) {
     component = new constructor(attrs);
   } else {
-    component = new _jreact.default.Component(attrs); //使组件具有 state， props
-
+    component = new _jreact.default.Component(attrs);
     component.constructor = constructor;
 
     component.render = function () {
-      //增加 render 方法
       return this.constructor(attrs);
     };
   }
 
   return component;
-} //渲染组件
-
+}
 
 function renderComponent(component) {
   var vnode = component.render();
@@ -209,13 +198,10 @@ function renderComponent(component) {
 function setAttribute(dom, attrs) {
   for (var key in attrs) {
     if (/^on/.test(key)) {
-      //对事件绑定的处理，以 on 开头的，dom[onclick] = attrs[onClick]
       dom[key.toLocaleLowerCase()] = attrs[key];
     } else if (key === 'style') {
-      //对 style 的处理
-      Object.assign(dom.style, attrs[key]); //新增的会赋值到 dom.style 上，同名的属性会覆盖
+      Object.assign(dom.style, attrs[key]);
     } else {
-      //其他的直接作为 dom 的属性
       dom[key] = attrs[key];
     }
   }
@@ -262,15 +248,14 @@ function () {
   function Component(props) {
     _classCallCheck(this, Component);
 
-    this.props = props; //构造组件时，需要一些属性
-
-    this.state = {}; //组件内部有些状态/变量
+    this.props = props;
+    this.state = {};
   }
 
   _createClass(Component, [{
     key: "setState",
     value: function setState(state) {
-      this.state = Object.assign(this.state, state); //额外的新增或修改，不是覆盖，所以用 Object.assign
+      this.state = Object.assign(this.state, state);
 
       _jreactDom.default.renderComponent(this);
     }
@@ -287,9 +272,9 @@ exports.default = _default;
 },{"./jreact-dom":"lib/jreact-dom.js"}],"index.js":[function(require,module,exports) {
 "use strict";
 
-var _jreact = _interopRequireDefault(require("./lib/jreact"));
+var _jreact = _interopRequireDefault(require("./lib/jreact.js"));
 
-var _jreactDom = _interopRequireDefault(require("./lib/jreact-dom"));
+var _jreactDom = _interopRequireDefault(require("./lib/jreact-dom.js"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -323,9 +308,12 @@ function (_Jreact$Component) {
 
     _this = _possibleConstructorReturn(this, _getPrototypeOf(App).call(this, props));
     _this.state = {
-      name: '张三',
-      job: '后端工程师',
-      hobby: '看电影'
+      name: '小讲堂',
+      courses: ['数学', '语文', '英语'],
+      styleObj: {
+        color: 'red',
+        fontWeight: 'bold'
+      }
     };
     return _this;
   }
@@ -334,21 +322,33 @@ function (_Jreact$Component) {
     key: "render",
     value: function render() {
       return _jreact.default.createElement("div", {
-        className: "wrapper"
-      }, _jreact.default.createElement("h1", {
-        className: "title"
-      }, "hello ", _jreact.default.createElement("span", null, this.state.name)), _jreact.default.createElement("p", null, "hobby: ", this.state.hobby), _jreact.default.createElement(Job, {
-        job: this.state.job,
-        onModifyJob: this.onModifyJob.bind(this)
-      }), _jreact.default.createElement(Hobby, {
-        hobby: this.state.hobby
-      }));
+        className: "container"
+      }, _jreact.default.createElement("h1", null, "\u6B22\u8FCE\u5230", _jreact.default.createElement("span", {
+        className: "name",
+        style: this.state.styleObj
+      }, this.state.name), "\u6765\u5B66\u4E60"), _jreact.default.createElement("p", null, "aaa"), _jreact.default.createElement("p", null, "bbb"), _jreact.default.createElement("div", {
+        className: "action"
+      }, _jreact.default.createElement("button", {
+        onClick: this.modifyName.bind(this)
+      }, "\u4FEE\u6539\u540D\u5B57"), _jreact.default.createElement("button", {
+        onClick: this.setStyle.bind(this)
+      }, "\u6837\u5F0F")));
     }
   }, {
-    key: "onModifyJob",
-    value: function onModifyJob(newJob) {
+    key: "modifyName",
+    value: function modifyName() {
+      var newName = window.prompt('输入标题', '小讲堂');
       this.setState({
-        job: newJob
+        name: newName
+      });
+    }
+  }, {
+    key: "setStyle",
+    value: function setStyle() {
+      this.setState({
+        styleObj: {
+          color: 'blue'
+        }
       });
     }
   }]);
@@ -356,43 +356,10 @@ function (_Jreact$Component) {
   return App;
 }(_jreact.default.Component);
 
-var Job =
-/*#__PURE__*/
-function (_Jreact$Component2) {
-  _inherits(Job, _Jreact$Component2);
-
-  function Job() {
-    _classCallCheck(this, Job);
-
-    return _possibleConstructorReturn(this, _getPrototypeOf(Job).apply(this, arguments));
-  }
-
-  _createClass(Job, [{
-    key: "render",
-    value: function render() {
-      return _jreact.default.createElement("div", {
-        className: "job"
-      }, "\u6211\u7684\u5DE5\u4F5C\u662F", this.props.job, _jreact.default.createElement("button", {
-        onClick: this.modifyJob.bind(this)
-      }, "\u4FEE\u6539\u5DE5\u4F5C"));
-    }
-  }, {
-    key: "modifyJob",
-    value: function modifyJob() {
-      this.props.onModifyJob('React工程师');
-    }
-  }]);
-
-  return Job;
-}(_jreact.default.Component); //组件的其他写法
-
-
-function Hobby(props) {
-  return _jreact.default.createElement("p", null, "\u6211\u7684\u5174\u8DA3\u662F", props.hobby);
-}
+window.JreactDOM = _jreactDom.default;
 
 _jreactDom.default.render(_jreact.default.createElement(App, null), document.querySelector('#app'));
-},{"./lib/jreact":"lib/jreact.js","./lib/jreact-dom":"lib/jreact-dom.js"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"./lib/jreact.js":"lib/jreact.js","./lib/jreact-dom.js":"lib/jreact-dom.js"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -420,7 +387,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "58777" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "62119" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
@@ -596,4 +563,4 @@ function hmrAcceptRun(bundle, id) {
   }
 }
 },{}]},{},["../node_modules/parcel-bundler/src/builtins/hmr-runtime.js","index.js"], null)
-//# sourceMappingURL=/chapter-2.e31bb0bc.js.map
+//# sourceMappingURL=/chapter-3.e31bb0bc.js.map
