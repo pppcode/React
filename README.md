@@ -264,7 +264,7 @@ function setAttribute(dom, attrs) {
 
 ```
 
-![设置 style 未生效](https://github.com/pppcode/React/blob/master/images/设置 style 未生效.jpg)
+![设置style未生效](https://github.com/pppcode/React/blob/master/images/设置style未生效.jpg)
 
 但是并未生效, dom 对象不能直接修改他的 style （直接覆盖，重置是不行的），正确的做法`.style.color = 'red'`
 
@@ -1548,51 +1548,64 @@ function setComponentProps(component, props) {
 
 以上就是 diff 算法的完整实现
 
-完整代码
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 测试
 
-修改样式时，只有要修改的部分做了替换
+'小讲堂'修改为'大课堂'
 
-截图
+![测试名字](https://github.com/pppcode/React/blob/master/images/测试名字.jpg)
+
+只有span 处闪动，说明只有这里进行了替换
+
+修改样式
+
+![修改样式](https://github.com/pppcode/React/blob/master/images/修改样式.jpg)
+
+只有 style 处闪动，说明只有这里进行了替换
+
+[完整代码](https://github.com/pppcode/React/tree/master/chapter-3/)
+[效果预览](https://pppcode.github.io/React/chapter-3/dist/index.html/)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
