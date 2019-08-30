@@ -131,44 +131,55 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
-function render(vnode, container) {
-  container.innerHTML = '';
+/**
+ * 
+ * @param {VNode} vnode 
+ * @param {HTMLElement} container 
+ */
+function createDomFromVnode(vnode) {
   console.log(vnode);
+  if (!vnode) return;
 
-  _render(vnode, container);
-}
-
-function _render(vnode, container) {
-  var dom = createDomfromVnode(vnode);
-  container.appendChild(dom);
-}
-
-function createDomfromVnode(vnode) {
-  if (typeof vnode === 'string' || typeof vnode === 'number') {
+  if (typeof vnode === 'string') {
     return document.createTextNode(vnode);
+  }
+
+  if (Array.isArray(vnode)) {
+    var fragment = document.createDocumentFragment();
+    vnode.forEach(function (vnodeChild) {
+      var dom = createDomFromVnode(vnodeChild);
+      fragment.appendChild(dom);
+    });
+    return fragment;
   }
 
   if (_typeof(vnode) === 'object') {
     if (typeof vnode.tag === 'function') {
+      //console.log(vnode)
       var component = createComponent(vnode.tag, vnode.attrs);
+      renderComponent(component);
       return component.$root;
-    }
+    } else {
+      var _dom = document.createElement(vnode.tag);
 
-    var dom = document.createElement(vnode.tag);
-    setAttribute(dom, vnode.attrs);
-
-    if (vnode.children && Array.isArray(vnode.children)) {
-      vnode.children.forEach(function (vnodeChild) {
-        _render(vnodeChild, dom);
+      setAttribute(_dom, vnode.attrs);
+      vnode.children.forEach(function (childVnode) {
+        return _render(childVnode, _dom);
       });
+      return _dom;
     }
-
-    return dom;
   }
 }
 
+function _render(vnode, container) {
+  if (!vnode) return;
+  var dom = createDomFromVnode(vnode);
+  return container.appendChild(dom);
+}
+
 function createComponent(constructor, attrs) {
-  var component;
+  //创建组件,设置组件属性
+  var component; //如果是用class创建的
 
   if (constructor.prototype instanceof _jreact.default.Component) {
     component = new constructor(attrs);
@@ -186,29 +197,213 @@ function createComponent(constructor, attrs) {
 
 function renderComponent(component) {
   var vnode = component.render();
-  var dom = createDomfromVnode(vnode);
-
-  if (component.$root && component.$root.parentNode) {
-    component.$root.parentNode.replaceChild(dom, component.$root);
-  }
-
+  var dom = diffNode(component.$root, vnode);
   component.$root = dom;
+  component.$root._component = component;
+}
+/**
+ * 本章节更新的代码
+ * @param {VNode} vnode 
+ * @param {HTMLElement} container 
+ */
+
+
+function render(vnode, container) {
+  //--
+  //container.innerHTML = ''
+  //-- 
+  //_render(vnode, container) 
+  //++
+  return diff(null, vnode, container);
 }
 
-function setAttribute(dom, attrs) {
-  for (var key in attrs) {
-    if (/^on/.test(key)) {
-      dom[key.toLocaleLowerCase()] = attrs[key];
-    } else if (key === 'style') {
-      Object.assign(dom.style, attrs[key]);
+function setAttribute(node, key, value) {
+  if (key.startsWith('on')) {
+    node[key.toLocaleLowerCase()] = value;
+  } else if (key === 'style') {
+    Object.assign(node.style, value);
+  } else {
+    node[key] = value;
+  }
+}
+/**
+ * 本章节新增代码
+ * @param {HTMLElement} dom 要对比更新的DOM
+ * @param {VNode} vnode  新的vnode
+ * @param {HTMLElement} container  DOM的容器
+ * @returns {HTMLElement} 更新后的DOM
+ */
+
+
+function diff(dom, vnode, container) {
+  var patchedDom = diffNode(dom, vnode);
+
+  if (container && patchedDom && patchedDom.parentNode !== container) {
+    container.appendChild(patchedDom);
+  }
+
+  return patchedDom;
+}
+
+function diffNode(dom, vnode) {
+  if (!vnode) {
+    return removeDom(dom);
+  }
+
+  var patchedDom = dom; //如果是文本类型的虚拟DOM，要么替换内容，要么替换元素
+
+  if (typeof vnode === 'string' || typeof vnode === 'number') {
+    if (patchedDom && patchedDom.nodeType === 3) {
+      if (patchedDom.textContent !== vnode) {
+        patchedDom.textContent = vnode;
+      }
     } else {
-      dom[key] = attrs[key];
+      patchedDom = document.createTextNode(vnode);
     }
+
+    return patchedDom;
+  } //如果是组件，就diff组件
+
+
+  if (_typeof(vnode) === 'object' && typeof vnode.tag === 'function') {
+    patchedDom = diffComponent(dom, vnode);
+    return patchedDom;
+  } //否则就是普通的vnode
+  //看dom是不是存在，如果不存就根据vnode创建
+
+
+  if (!dom) {
+    patchedDom = document.createElement(vnode.tag);
+  } //如果存在但标签变了，就修正标签（创建新标签的dom，把旧标签dom的孩子放到新标签dom里，旧标签替换成新标签）
+
+
+  if (dom && dom.nodeName.toLowerCase() !== vnode.tag.toLowerCase()) {
+    patchedDom = document.createElement(vnode.tag);
+    dom.childNodes.forEach(function (child) {
+      return patchedDom.appendChild(child);
+    });
+    replaceDom(patchedDom, dom);
+  }
+
+  diffAttributes(patchedDom, vnode);
+  diffChildren(patchedDom, vnode.children);
+  return patchedDom;
+}
+
+function diffComponent(dom, vnode) {
+  var component = dom ? dom._component : null;
+
+  if (component && component.constructor === vnode.tag) {
+    setComponentProps(component, vnode.attrs);
+  } else {
+    component = createComponent(vnode.tag, vnode.attrs);
+    setComponentProps(component, vnode.attrs);
+  }
+
+  return component.$root;
+}
+
+function setComponentProps(component, props) {
+  component.props = props;
+  renderComponent(component);
+}
+
+function diffChildren(patchedDom, vChildren) {
+  var domChildren = patchedDom.childNodes;
+  var domsHasKey = {};
+  var _iteratorNormalCompletion = true;
+  var _didIteratorError = false;
+  var _iteratorError = undefined;
+
+  try {
+    for (var _iterator = domChildren[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+      var _dom2 = _step.value;
+
+      if (_dom2.key) {
+        domsHasKey[_dom2.key] = _dom2;
+      }
+    }
+  } catch (err) {
+    _didIteratorError = true;
+    _iteratorError = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion && _iterator.return != null) {
+        _iterator.return();
+      }
+    } finally {
+      if (_didIteratorError) {
+        throw _iteratorError;
+      }
+    }
+  }
+
+  var vChild;
+  var patchChildDom;
+  var length = Math.max(domChildren.length, vChildren.length);
+
+  for (var i = 0; i < length; i++) {
+    vChild = vChildren[i];
+
+    if (vChild.key && domsHasKey[vChild.key]) {
+      patchChildDom = diffNode(domsHasKey[vChild.key], vChild);
+    } else {
+      patchChildDom = diffNode(domChildren[i], vChild);
+    }
+
+    if (patchChildDom.parentNode !== patchedDom) {
+      patchedDom.appendChild(patchChildDom);
+    }
+
+    setOrderInContainer(patchedDom, patchChildDom, i);
+  }
+}
+
+function diffAttributes(dom, vnode) {
+  var old = {};
+  var attrs = vnode.attrs;
+
+  for (var i = 0; i < dom.attributes.length; i++) {
+    var attr = dom.attributes[i];
+    old[attr.name] = attr.value;
+  }
+
+  for (var key in old) {
+    if (!(key in attrs)) {
+      setAttribute(dom, key, undefined);
+    }
+  }
+
+  for (var key in attrs) {
+    console.log(key);
+
+    if (old[key] !== attrs[key]) {
+      setAttribute(dom, key, attrs[key]);
+    }
+  }
+}
+
+function removeDom(dom) {
+  if (dom && dom.parentNode) {
+    dom.parentNode.removeChild(dom);
+  }
+}
+
+function replaceDom(newDom, oldDom) {
+  if (dom && dom.parentNode) {
+    dom.parentNode.replaceChild(newDom, oldDom);
+  }
+}
+
+function setOrderInContainer(container, dom, order) {
+  if (container.childNodes[order] !== dom) {
+    container.childNodes[order].insertAdjacentElement('beforebegin', dom);
   }
 }
 
 var _default = {
   render: render,
+  setAttribute: setAttribute,
   renderComponent: renderComponent
 };
 exports.default = _default;
@@ -230,6 +425,12 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
+/**
+ * 
+ * @param {String} tag 
+ * @param {Object} attrs 
+ * @param  {String|Object} children 
+ */
 function createElement(tag, attrs) {
   for (var _len = arguments.length, children = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
     children[_key - 2] = arguments[_key];
@@ -238,24 +439,27 @@ function createElement(tag, attrs) {
   return {
     tag: tag,
     attrs: attrs,
-    children: children
+    children: children,
+    key: attrs ? attrs.key ? attrs.key : null : null
   };
 }
 
 var Component =
 /*#__PURE__*/
 function () {
-  function Component(props) {
+  function Component() {
+    var props = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
     _classCallCheck(this, Component);
 
-    this.props = props;
     this.state = {};
+    this.props = props;
   }
 
   _createClass(Component, [{
     key: "setState",
     value: function setState(state) {
-      this.state = Object.assign(this.state, state);
+      Object.assign(this.state, state);
 
       _jreactDom.default.renderComponent(this);
     }
@@ -387,7 +591,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "62119" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "57357" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

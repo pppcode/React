@@ -1214,6 +1214,8 @@ export default {
 
 实现的效果
 
+![最终效果](https://github.com/pppcode/React/blob/master/images/最终效果.jpg)
+
 index.js
 
 ```
@@ -1484,6 +1486,12 @@ function diffChildren(patchedDom, vChildren) {
     setOrderInContainer(patchedDom, patchChildDom, i)
   }
 }
+
+function setOrderInContainer(container, dom, order) {
+  if(container.childNodes[order] !== dom) { //如果本身位置是对应的，就不走下面的逻辑了
+    container.childNodes[order].insertAdjacentElement('beforebegin', dom) //找到原来的位置，放置于他的前面即可
+  }
+}
 ```
 
 属性如何 diff 呢
@@ -1517,10 +1525,30 @@ function diffAttributes(dom, vnode) {
 如果不是标签，而是组件呢，如何做呢
 
 ```
+function diffComponent(dom, vnode) {
+  let component = dom?dom_component:null //从 dom 上拿到这个组件
+  
+  //如果 component 是存在的，组件的 constructor 是这个函数(tag: App)，
+  if(component && component.constructor === vnode.tag) {
+    setComponentProps(component,vnode.attrs) //设置组件的属性
+  }else {
+    component = createComponent(vnode.tag, vnode.attrs)
+    setComponentProps(component, vnode.attrs)
+  }
+
+  return component.$root
+}
+
+function setComponentProps(component, props) {
+  component.props = props //设置组件属性
+  renderComponent(component) //渲染组件
+}
 ```
 实现了 DOM 利用的最大化，提高了性能
 
 以上就是 diff 算法的完整实现
+
+完整代码
 
 
 

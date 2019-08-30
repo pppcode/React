@@ -76,6 +76,12 @@ function diffChildren(patchedDom, vChildren) {
   }
 }
 
+function setOrderInContainer(container, dom, order) {
+  if(container.childNodes[order] !== dom) { //如果本身位置是对应的，就不走下面的逻辑了
+    container.childNodes[order].insertAdjacentElement('beforebegin', dom) //找到原来的位置，放置于他的前面即可
+  }
+}
+
 function diffAttributes(dom, vnode) {
   const old = {}
   const attrs = vnode.attrs
@@ -97,12 +103,6 @@ function diffAttributes(dom, vnode) {
     if(old[key] !== attrs[key]) {
       setAttribute(dom, key, attrs[key])
     }
-  }
-}
-
-function setOrderInContainer(container, dom, order) {
-  if(container.childNodes[order] !== dom) { //如果本身位置是对应的，就不走下面的逻辑了
-    container.childNodes[order].insertAdjacentElement('beforebegin', dom) //找到原来的位置，放置于他的前面即可
   }
 }
 

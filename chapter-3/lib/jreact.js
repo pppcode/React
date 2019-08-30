@@ -1,26 +1,31 @@
-import jreactDom from "./jreact-dom";
+import JreactDom from './jreact-dom'
 
-function createElement(tag, attrs, ...children) { 
+/**
+ * 
+ * @param {String} tag 
+ * @param {Object} attrs 
+ * @param  {String|Object} children 
+ */
+function createElement(tag, attrs, ...children) {
   return {
-    tag,
-    attrs,
-    children
+    tag, 
+    attrs, 
+    children,
+    key: attrs?(attrs.key?attrs.key:null):null
   }
 }
 
-class Component { 
-  constructor(props) {
-    this.props = props
+class Component {
+  constructor(props = {}) {
     this.state = {}
+    this.props = props
   }
 
   setState(state) {
-    this.state = Object.assign(this.state, state)
-    jreactDom.renderComponent(this)
+    Object.assign(this.state, state)
+    JreactDom.renderComponent(this)
   }
 }
 
-export default {
-  createElement,
-  Component
-}
+
+export default { createElement, Component }
