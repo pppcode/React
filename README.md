@@ -1563,7 +1563,7 @@ function setComponentProps(component, props) {
 只有 style 处闪动，说明只有这里进行了替换
 
 [完整代码](https://github.com/pppcode/React/tree/master/chapter-3/)
-[效果预览](https://pppcode.github.io/React/chapter-3/dist/index.html/)
+[效果预览](https://pppcode.github.io/React/chapter-3/dist/)
 
 
 
