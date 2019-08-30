@@ -1392,7 +1392,144 @@ function diffNode(dom, vnode) {
 
 **对属性的比较**
 
-**对子元素的比较**
+**对子元素的比较(重点)**
+
+一开始渲染好了，现在子元素发生了变化：
+
+- 新增
+- 修改
+- 删除
+- 移位
+
+虚拟 DOM 变化时，真实 DOM 也要跟着发生改变，最大程度上利用已有的 DOM ,例如 b没变，就不要再去渲染b，a节点知识内容变化了，所以只需要改变文本内容，e节点只需要换个位置，多了个 g，加上去，把 f 删掉
+
+具体如何做呢
+
+**逐层对比，逐个对比** 
+
+![diff算法-逐个对比](https://github.com/pppcode/React/blob/master/images/diff算法-逐个对比.jpg)
+
+![树状结构](https://github.com/pppcode/React/blob/master/images/树状结构.jpg)
+
+比较第一个，aa 变成a ，里面的内容变化了（或者标签或者属性）; 比较第二个，没变；第三个，把 c变成e, 第四个，没变，第五个，把e变为c,第六个，把 f 变为 g
+
+做对比时，再次执行 diffNode()
+
+优点：简单快速
+缺点：遇到极端情况时，比如把最后一个移位到第一个，逐个对比时，基本全部挪动一下位置，做了100%的更新（但实际上只是两个互换了一下位置）
+
+**优化：增加 key 值**
+
+![diff算法-增加key时](https://github.com/pppcode/React/blob/master/images/diff算法-增加key时.jpg)
+
+- 第一个，对于没有 key 值的，不知道是旧的还是新的，直接去做比较，然后修改真实 DOM 中的文本内容就行了
+- 第二个，虚拟 DOM 中 b 的 key 值是 b1, 通过b1 ：b  找到真实 DOM 中的 b（而且位置也对），什么都不做
+- 第三个，e 没有 key,直接去对比，把真实dom中的 c 替换成 e
+- 第四个，d 通过 key 找到了 d，没有变化
+- 第五个，c 通过 key 发现真实 DOM 中没有，把 e(虚拟 c 对应的位置) 变成 c 
+
+带 key 值的移动位置时
+
+![diff算法-移动位置时](https://github.com/pppcode/React/blob/master/images/diff算法-移动位置时.jpg)
+
+虚拟dom 中的 d ，通过 d1:d , 在真实 dom 中找到了 d,并改变他的位置
+
+以上算法还是有一些弊端，可以再优化
+
+**有 key 的都可以复用**
+
+![diff算法-复用key](https://github.com/pppcode/React/blob/master/images/diff算法-复用key.jpg)
+
+- 序号1 没有 key 值，直接替换掉，
+- 序号2 有key 值，通过 key 值找到后 放入到 2 号位置，并没有新增，只是做了一个移位（复用以前的），
+- 序号3 没有 key 值，从没有 key 的这一列去找，找到 e，放入到 第三位，
+- 序号4 有key ,从有key 的一列去找，找到了放入到 第4的位置，
+- 序号 5 有key,从有 key 的一列去找，找到了放入到第 5 的位置，
+- 序号 6 没有 key 值，从没有 key 的这一列去找，找到了f ，修改为 g
+
+若虚拟dom 中没有，实体 dom 中有，则把对应的给删掉
+
+**代码实现**
+因为过于复杂，稍微简单的方式实现
+
+```
+function diffChildren(patchedDom, vChildren) {
+  let domChildren = patchedDom.childNodes //子节点
+  let domsHasKey = {} //原来 dom 里带 key 的拿出来 {b1:b,c1:c,d1:d}
+  for (let dom of domChildren) {
+    if (dom.key) {
+      domsHasKey[dom.key] = dom
+    }
+  }
+
+  //用最长的做判断（dom, vdom） 循环一次即可，
+  let vChild
+  let patchChildDom
+  let length = Math.max(domChildren.length, vChildren.length)
+
+  for (let i = 0; i < length; i++) {
+    vChild = vChildren[i]
+
+    //有 key 的处理逻辑
+    if (vChild.key && domsHasKey[vChild.key]) {
+      patchChildDom = diffNode(domsHasKey[vChild.key], vChild)
+    } else { //不带 key 的处理逻辑
+      patchChildDom = diffNode(domChildren[i], vChild)
+    }
+
+    if (patchChildDom.parentNode !== patchedDom) {
+      patchedDom.appendChild(patchChildDom)
+    }
+    //设置子元素在父元素中的位置
+    setOrderInContainer(patchedDom, patchChildDom, i)
+  }
+}
+```
+
+属性如何 diff 呢
+
+```
+function diffAttributes(dom, vnode) {
+  const old = {}
+  const attrs = vnode.attrs
+
+  //找到真实 dom 的属性
+  for (var i = 0; i < dom.attributes.length; i++) {
+    const attrs = dom.attributes[i]
+    old[attrs.name] = attr.value
+  }
+  //自己的属性不在新的属性里，把他删除掉
+  for (var key in old) {
+    if(!(key in attrs)) {
+      setAttribute(dom, key, undefined)
+    }
+  }
+  //重新遍历，设置为新的属性
+  for (var key in attrs) {
+    console.log(key)
+    if(old[key] !== attrs[key]) {
+      setAttribute(dom, key, attrs[key])
+    }
+  }
+}
+```
+
+如果不是标签，而是组件呢，如何做呢
+
+```
+```
+实现了 DOM 利用的最大化，提高了性能
+
+以上就是 diff 算法的完整实现
+
+
+
+
+
+
+
+
+
 
 
 
