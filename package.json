@@ -7,6 +7,10 @@
     "json5": "^2.1.0",
     "parcel-bundler": "^1.12.3"
   },
+  "scripts": {
+    "start": "parcel index.html",
+    "build": "parcel build index.html --public-url ./chapter-3/dist/"
+  },
   "devDependencies": {
     "babel-core": "^6.26.3",
     "babel-plugin-transform-react-jsx": "^6.24.1",
