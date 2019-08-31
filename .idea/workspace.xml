@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="40d9b4a7-4649-4c2d-9ddc-5f1f3d55c1a7" name="Default Changelist" comment="" />
+    <list default="true" id="40d9b4a7-4649-4c2d-9ddc-5f1f3d55c1a7" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <ignored path="$PROJECT_DIR$/.tmp/" />
     <ignored path="$PROJECT_DIR$/temp/" />
     <ignored path="$PROJECT_DIR$/tmp/" />
@@ -12,14 +14,34 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="FileEditorManager">
-    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300" />
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/README.md">
+          <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+            <state split_layout="SPLIT">
+              <first_editor relative-caret-position="293">
+                <caret line="1569" lean-forward="true" selection-start-line="1569" selection-end-line="1569" />
+              </first_editor>
+              <second_editor />
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="IdeDocumentHistory">
+    <option name="CHANGED_PATHS">
+      <list>
+        <option value="$PROJECT_DIR$/README.md" />
+      </list>
+    </option>
+  </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="149" />
-    <option name="y" value="50" />
+    <option name="x" value="345" />
+    <option name="y" value="66" />
     <option name="width" value="1544" />
     <option name="height" value="1057" />
   </component>
@@ -75,7 +97,7 @@
       <option name="presentableId" value="Default" />
       <updated>1567164764074</updated>
       <workItem from="1567164771475" duration="223000" />
-      <workItem from="1567165587793" duration="249000" />
+      <workItem from="1567165587793" duration="452000" />
     </task>
     <task id="LOCAL-00001" summary="修复图片问题">
       <created>1567164983494</created>
@@ -88,12 +110,13 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="472000" />
+    <option name="totallyTimeSpent" value="675000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="149" y="50" width="1544" height="1057" extended-state="0" />
+    <frame x="345" y="66" width="1544" height="1057" extended-state="0" />
+    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.07879186" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.19763625" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -193,21 +216,21 @@
     <entry file="file://$PROJECT_DIR$/images/diff算法-逐个对比.jpg">
       <provider selected="true" editor-type-id="images" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/README.md">
-      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
-        <state split_layout="SPLIT">
-          <first_editor relative-caret-position="253">
-            <caret line="1438" column="17" lean-forward="true" selection-start-line="1438" selection-start-column="17" selection-end-line="1438" selection-end-column="17" />
-          </first_editor>
-          <second_editor />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/images/页面显示效果.jpg">
       <provider selected="true" editor-type-id="images" />
     </entry>
     <entry file="file://$PROJECT_DIR$/images/真实dom结构.jpg">
       <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/README.md">
+      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+        <state split_layout="SPLIT">
+          <first_editor relative-caret-position="293">
+            <caret line="1569" lean-forward="true" selection-start-line="1569" selection-end-line="1569" />
+          </first_editor>
+          <second_editor />
+        </state>
+      </provider>
     </entry>
   </component>
 </project>
